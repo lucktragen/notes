@@ -1,0 +1,39 @@
+RESTful API 设计六要素:
+    1.资源路径(URL)
+        在RESTful API中，每一个资源路径对应一个唯一的资源，所以规定网址中不能有动词,只能有名词,并且一般来说为复数。
+        比如:
+            http://api.local.com/movies     # 表示电影资源
+            http://api.local.com/images     # 表示图片资源
+            http://api.local.com/musics     # 表示音乐资源
+            http://api.local.com/articles   # 表示文章资源
+        为了方便开发,可以在URL中加入版本号
+            http://api.local.com/v1/movies   # 表示电影资源
+            http://api.local.com/v1/images   # 表示图片资源
+            http://api.local.com/v1/musics   # 表示音乐资源
+            http://api.local.com/v1/articles # 表示文章资源
+
+    2.HTTP动词(Method)
+        对于资源,一般有4个操作,CURD(增/删/改/查)
+        GET:        # 从服务器 获取 资源(一项或多项)
+        POST：      # 在服务器 新建 一个资源
+        PUT：       # 在服务器 更新 资源,服务器返回完整的属性
+        DELETE:     # 从服务器 删除 资源
+
+        HEAD:       # 从服务器 获取 信息(响应头)
+        PATCH:      # 在服务器 更新 资源,服务器只返回更新的属性
+
+        例子:
+            POST/articles       # 创建文章内容
+            GET/articles/1      # 获取主键id为1的文章
+
+    3.过滤信息(query-string)
+        当服务器端需要返回的数据很多时,服务器不可能全部返回。此时，我们可以在客户端携带过滤信息,比如:分页信息
+        例子:
+            ?page=1                     # 第一页的信息
+            ?offset=10&per_page=10      # 每页10条，偏移 10
+
+    4.状态码(status-code)
+        服务器端返回的信息，用来告诉客户端操作结果
+
+    5.错误信息(Error)
+    6.返回信息(Result)

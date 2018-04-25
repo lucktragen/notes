@@ -1,0 +1,320 @@
+vagrant安装(http://www.vagrantup.com)
+	Vagrant 常用命令
+	  vagrant —help 帮助命令
+	  vagrant version 查看版本
+	  vagrant status 查看镜像状态
+	  vagrant halt 停止镜像
+	  vagrant destroy 删除镜像
+
+	Vagrant 创建一个centos环境
+		1、创建一个空文件夹 mkdir centos7
+		2、vagrant init centos/7 此时创建了一个Vagrantfile文件
+		3、vagrant up 更新或者创建环境 国外镜像下载速度慢，可以先下载到本地
+		然后使用 vagrant box add centos7 /Users/sowhy/Downloads/centos-7.0-x86\_64.box 来本地安装
+		4、vagrant ssh 进入centos环境里
+		5、退出 vagrant exit
+
+	使用vagrant在centos下安装docker
+	1、卸载旧版本docker
+		sudo yum remove docker,docker-client,docker-client-latest,docker-common,docker-latest ,docker-latest-logrotate,docker-logrotate,docker-selinux,docker-engine-selinux,docker-engine
+
+	2、安装必要组件
+		sudo yum install -y yum-utils,device-mapper-persistent-data,lvm2
+
+	3、指定源
+	sudo yum-config-manager
+	--add-repo
+	https://download.docker.com/linux/centos/docker-ce.repo
+
+	4、安装docker
+		sudo yum install docker-ce
+	5、启动docker
+		sudo systemctl start docker
+
+	Docker-machine
+	通过docker-machine 安装一个小型含有docker的虚拟机
+		docker-machine create demo
+
+	列出docker-machine创建的所有虚拟机
+		docker-machine ls
+
+	进入docker-machine创建的虚拟机
+		docker-machine ssh 虚拟机名
+
+	停止docker-machine 虚拟机
+		docker-machine stop 虚拟机名
+
+	查看docker-machine 环境状态
+		docker-machine env 虚拟机名
+
+	关闭本地Docker连接管理远程虚拟机Docker方法
+    1.docker-machine env 虚拟机名称
+    2.eval $(docker-machine env demo)
+    3.docker version即可查看连接上demo中的docker
+
+	释放远程虚拟机
+    eval $(docker-machine env --unset)
+
+	删除docker-machine
+    docker-machine rm 虚拟机名
+
+Docker 安装总结
+	在Mac上玩Docker
+    1.Docker for Mac直接安装
+    2.通过Virtualbox或者Vmware虚拟化软件直接创建Linux虚拟机，在虚拟机里安装使用Docker
+    3.通过Vagrant + VirtualBox快速搭建Docker host （推荐）
+    4.通过Docker-machine快速搭建Docker host
+
+	在Windows上玩Docker
+    1.Docker for Mac直接安装(对系统要求高，至少win10)
+    2.通过Virtualbox或者Vmware虚拟化软件直接创建Linux虚拟机，在虚拟机里安装使用Docker
+    3.通过Vagrant + VirtualBox快速搭建Docker host （推荐）
+    4.通过Docker-machine快速搭建Docker host
+
+	在Linux 上玩Docker
+    1.Linux主机
+    2.Linux虚拟机(支持虚拟化的任何操作系统或平台)
+
+	在云上玩Docker
+	  1.Docker-machine + driver（AWS，Aliyun等）
+	  2.直接使用云服务商提供的容器服务
+      a.AWS的ECS（Amazon Elastic Container Service）
+      b.Aliyun的Container Service
+
+
+Docker的架构和底层技术
+	Docker提供了一个开发、打包、运行app的平台
+	把app和底层infrastructure隔离开来
+
+	Docker Engine包含
+    后台进程 （dockerd）
+    REST API Server
+    CLI 接口（docker）
+
+	底层技术支持
+    Namespaces：做隔离pid，net，ipc，mnt，uts
+    Control groups:做资源限制
+    Union file systems：Container和image的分层
+
+	Docker Image概述
+    什么是：
+      文件和meta data的集合 （root filesystem）
+      分层的，并且每一层都可以添加改变删除文件，成为一个新的image
+      不同的image可以共享相同的layer
+      image本身是read-only的
+	Image的获取
+    1.Bulid from Dockerfile
+    2.pull from registry
+      docker pull ubuntu:14.04
+
+	去掉sudo方式
+    1. sudo groupadd docker
+    2. sudo gpasswd -a bagrant docker
+    3. sudo service docker restart
+    4. exit 重新登录ssh
+
+	什么是Container
+    通过Image创建（copy）
+    在Image layer之上建立一个container layer（可读写）
+    类比面向对象:类和实例
+    Image负责app的存储和分发，Container负责运行app
+
+  常用命令
+    docker container ls 列出所有容器 加-a 就可以看到所有正在运行的和已经退出的
+    docker container ls -aq 列出所有容器ID
+    docker container rm 容器ID 删除容器
+    docker rm $(docker container ls -aq) 删除所有容器
+    docker rm $(docker container ls -f "status=exited" -q)删除所有已经退出的容器
+
+    docker container commit （docker commit）
+
+    docker container build (docker build)
+        docker build -t lucktragen/centos-vim-new .
+
+		制作一个自己的Docker镜像
+			Docker commit [NAMES] DockerID/命名
+
+  Dockerfile语法梳理及最佳实践
+    FROM (尽量使用官方image作为base image)
+        FROM scratch #制作 base image
+        FROM centos  #使用base image
+        FROM ubuntu:14.04
+
+    LABEL (Metadata不可少)
+        LABEL maintainer="ahhuangyi@gmail.com"
+        LABEL version="1.0"
+        LABEL description="This is description"
+
+    RUN (为了美观,复杂的RUN请用反斜杠换行！避免无用分层,合并多条命令成一行)
+        RUN yum update && yum install -y vim \ python-dev #反斜杠换行
+        RUN apt-get update && apt-get install -y perl \
+            pwgen --no-install-recommends && rm -rf \
+            /var/lib/apt/lists/*  #注意清理cache
+        RUN /bin/bash -c 'source $HOME/.bashrc;echo $HOME'
+
+    WORKDIR 设定工作目录(用WORKDIR，不要用RUN cd！尽量使用绝对目录)
+        WORKDIR /root
+            WORKDIR /test #如果没有会自动创建test目录
+            WORKDIR demo
+            RUN pwd  #输出结果应该是 /test/demo
+
+    ADD and COPY (大部分情况,COPY 优于ADD.ADD除了COPY还有额外功能(解压)。添加远程文件/目录请使用curl或者wget)
+      ADD hello /
+      ADD test.tar.gz / #添加到根目录并解压
+
+      WORKDIR /root
+      ADD hello test/     #/root/test/hello
+
+      WORKDIR /root
+      COPY hello test/
+		ENV （尽量使用ENV增加可维护性）
+			ENV MYSQL_VERSION 5.6 #设置常量
+			RUN apt-get instal -y mysql-server="${MYSQL_VERSION}" \
+				&& rm -rf /var/lib/apt/lists/* #引用常量
+
+		RUN vs CMD vs ENTRYPOINT
+			RUN：执行命令并创建新的Image Layer
+			CMD：设置容器启动后默认执行的命令和参数
+			ENTRYPOINT:设置容器启动时运行的命令
+
+		Shell 和 Exec格式
+			Shell格式
+				RUN apt-get install -y vim
+				CMD echo "hello docker"
+				ENTRYPOINT echo "hello docker"
+
+			Exec格式
+				RUN ["apt-get","install","-y","vim"]
+				CMD ["/bin/echo","hello docker"]
+				ENTRYPOINT ["/bin/echo","hello docker"]
+
+			举例：
+				Dockerfile1
+					FROM centos
+					ENV name Docker
+					ENTRYPOINT echo "hello $name"
+
+				Dockerfile2
+						FROM centos
+						ENV name Docker
+						ENTRYPOINT ["/bin/echo","hello $name"]
+
+			CMD
+				容器启动时默认执行的命令
+				如果docker run指定了其他命令，CMD命令被忽略
+				如果定义了多个CMD，只有最后一个会执行
+			ENTRYPOINT
+				让容器以应用程序或者服务的形式运行
+				不会被忽略，一定会执行
+				最佳实践:写一个shell脚本作为entrypoint
+					COPY docker-entrypoint.sh /usr/local/bin/
+					ENTRYPOINT ["docker-entrypoint.sh"]
+					EXPOSE 27017
+					CMD ["mongod"]
+	Docker镜像的发布
+		1.docker push lucktragen/centos-vim-test:latest
+			向私有DockerHub里发布镜像
+				a. docker build -t 10.75.44.22:5000/hello-world .
+				b. sudo more /etc/docker/daemon.json 添加 {"insecure-registries":["10.75.44.22:5000"]}
+				c. sudo vim /lib/systemd/system/docker.service 添加 EnvironmentFile=-/etc/docker/daemon.json
+				d. sudo service docker restart
+				e. docker push 10.75.44.22:5000/hello-world
+
+		2.docker一些命令
+			docker run -it 镜像ID /bin/bash    #-it 指以交互式的状态运行
+			docker run -d 镜像ID  #以后台方式运行
+			docker run -d --name=demo lucktragen/hello-world  #指定一个容器名称为demo
+			docker inspect 容器ID #查看容器详细信息
+
+	网络基础知识
+		单机
+			Bridge Network
+
+
+			Host Network
+
+
+			None Network
+
+
+		多机
+			Overlay Network
+
+		端口映射
+			sudo docker run --name web -d -p 80:80 nginx    #将web容器里的nignx 80端口映射到本地80端口
+
+		Docker 同步外部文件数据
+			1.安装 vagrant-scp插件 vagrant plugin install vagrant-scp
+			2.vagrant ssh docker镜像
+			3.vagrant scp
+
+	Docker数据持久化存储和数据共享
+		Docker持久化数据的方案
+			1.基于本地文件系统的Volume。可以在执行Docker create 或者Docker run时，通过-v参数将主机的目录作为容器的数据卷。这部分功能便是基于本地文件系统的volume管理。
+			2.基于plugin的Volume，支持第三方的存储方案，比如NAS，aws
+
+		Volume的类型
+			1.受管理的data Volume，由docker后台自动创建。
+				VOLUME ["/var/lib/mysql"]
+				docker run -v mysql:/var/lib/mysql
+
+				例:	sudo docker run -d -v mysql:/var/lib/mysql --name mysql1 -e MYSQL_ALLOW_EMPTY_PASSWORD=true mysql
+
+			2.绑定挂载的Volume，具体挂载位置可以由用户指定。(Bind Mouting)
+				docker run -v /home/aaa:/root/aaa
+
+				例子： docker run -d -v $(pwd):/usr/share/nginx/html -p 80:80 --name web lucktragen/my-nginx
+
+	实战:创建一个完整项目
+		1.创建mysql容器 后台运行 映射到本地/var/lib/mysql 设置账号root的密码为root 数据库名 wordpress
+			docker run -d --name mysql -v mysql-data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=wordpress mysql
+		2.创建一个 wordpress 容器
+			docker run -d -e WORDPRESS_DB_HOST=mysql:3306 --link mysql -p 8080:80 wordpress
+
+	Docker Compose
+		Docker Compose 是一个工具
+		这个工具可以通过一个yml文件定义多容器的docker应用
+		通过一条命令就可以根据yml文件的定义去创建或者管理这个多容器
+
+		docker-composer.yml
+			Service
+				一个service代表一个container,这个container可以从dockerhub的image来创建,或者从本地的Dockerfile build出来的image来创建
+				Service的启动类似docker run，我们可以给其指定network和volume，所以可以给service指定network和Volume的引用
+					例子1 : 在dockerhub上拉取
+						services:
+							db:
+								image:postgres:9.4
+								volumes:
+									- "db-data:/var/lib/postgresql/data"
+								networks:
+									- back-tier
+						类似于: docker run -d --network back-tier -v db-data:/var/lib/postgresql/data postgres:9.4
+							其中: volumes:db-data 相当于 docker volume create db-data
+
+
+						例子2 : 在本地获取
+						services:
+							worker:
+								build: ./worker
+								links:
+									-db
+									-redis
+								networks:
+									- back-tier
+						类似于: docker run -d --network back-tier -v db-data:/var/lib/postgresql/data postgres:9.4
+							其中: networks: back-tier 相当于 docker network create -d bridge back-tier
+
+			Networks
+
+			Volumes
+
+		Docker compose
+			启动yml文件 docker-compose -f docker-compose.yml up [-d] (其中 -f docker-compose.yml可省略,加-d直接后台启动。不加进去可以看log)
+
+
+
+
+
+
+
+d
