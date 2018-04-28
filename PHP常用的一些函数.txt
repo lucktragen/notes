@@ -1,0 +1,1 @@
+filter_var (PHP内置过滤函数,可以检车email、IP等)
