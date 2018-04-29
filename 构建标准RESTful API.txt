@@ -63,4 +63,9 @@ RESTful API 设计六要素:
             PUT/collections/:id  			-- 返回资源的完整属性
             PATCH/collections/:id			-- 返回被修改的属性
             DELECT/collections/:id			-- 返回204状态码 + 空文档
-            
+
+    APP(通信)接口定义
+        接口地址:(http://app.com/api.php?format=xml)
+        接口文件:(api.php 处理一些业务逻辑)
+        接口数据
+
