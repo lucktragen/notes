@@ -5,5 +5,5 @@
     ├── Docker 及 DevOps学习笔记              # 2018.4.7  --- 4.20
     ├── 构建标准RESTful API                   # 2018.4.25 --- 
     ├── PHP常用的一些函数                      # 2018.4.28
-    ├── response.php XML、JSON、数组格式输出   # 2018.4.29 
+    ├── response.php XML、JSON、数组格式输出   # 2018.4.29
     ├── Thinkphp5 百度地图接口封装             # 2018.5.17 
