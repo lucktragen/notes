@@ -1,0 +1,110 @@
+百度地图封装
+    获取地址经纬度等信息
+    1.extra 下创建map.php文件设置 配置相关信息以供调用
+
+        <?php
+            return [
+                'ak' => 'i2vsXfbLK62f2qWloEoFcxWtc5dPP840',
+                'baidu_map_url' => 'http://api.map.baidu.com/',
+                'geocoder'      => 'geocoder/v2/',
+                'width'         => 400,
+                'height'        => 300,
+                'staticimage' => 'staticimage/v2',
+            ];
+
+    2. common.php文件下创建 doCurl 方法
+        /**
+         * @param $url
+         * @param int $type 0 get  1 post
+         * @param array $data
+         */
+        function doCurl($url, $type=0, $data=[]) {
+            $ch = curl_init(); // 初始化
+            // 设置选项
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_HEADER,0);
+
+            if($type == 1) {
+                // post
+                curl_setopt($ch, CURLOPT_POST, 1);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+            }
+            
+            //执行并获取内容
+            $output = curl_exec($ch);
+            // 释放curl句柄
+            curl_close($ch);
+            return $output;
+        }
+
+    3. extends 下创建 Map.php文件 编写方法供调用
+
+        <?php
+            /**
+             *  百度地图相关业务封装
+             */
+
+            class Map{
+                public static function getLngLat ( $address ){
+                    //http://api.map.baidu.com/geocoder/v2/?address=北京市海淀区上地十街10号&output=json&ak=您的ak&callback=showLocation //GET请求
+                    if (!$address){
+                        return '';
+                    }
+                    $data = [
+                        'address' => $address,
+                        'ak'      => config('map.ak'),
+                        'output'  => 'json',
+                    ];
+
+                    $url = config('map.baidu_map_url').config('map.geocoder').'?'.http_build_query($data);
+                    // 1 file_get_contents($url)
+                    // 2 curl
+                    $result = doCurl($url);
+                    return $result;
+                }
+
+                /**
+                 *  根据经纬度或者地址来获取百度地图
+                 * @param $center
+                 */
+                public static function staticimage( $center )
+                {
+                    if (!$center){
+                        return '';
+                    }
+                    //http://api.map.baidu.com/staticimage/v2?ak=E4805d16520de693a3fe707cdc962045&mcode=666666&center=116.403874,39.914888&width=300&height=200&zoom=11
+                    $data = [
+                        'ak'      => config('map.ak'),
+                        'width'   => config('map.width'),
+                        'height'  => config('map.height'),
+                        'center'  => $center,
+                        'markers' => $center,
+                    ];
+
+                    $url = config('map.baidu_map_url').config('map.staticimage').'?'.http_build_query($data);
+                    $result = doCurl($url);
+                    return $result;
+
+                }
+
+            }
+
+    测试:
+        return \Map::getLngLat('北京昌平沙河地铁') 可获得
+        {
+            "status": 0,
+            "result": {
+                "location": {
+                    "lng": 116.21645635689414,
+                    "lat": 40.2217235498323
+                },
+                "precise": 0,
+                "confidence": 14,
+                "level": "区县"
+            }
+        }
+
+
+        return \Map::staticimage('北京昌平沙河地铁') 在view 页面设置<img style="margin: 20px;" width="280" height="140" src="{:url('index/map')}">
+        可获得相关地图信息
