@@ -5,6 +5,17 @@
     Route::rule("路由表达式","路由地址","请求类型","路由参数(数组)","变量规则(数组)");
     例如:
         Route::rule('hello','sample/Test/index',"GET",['https'=>false],[]);
+        或者简写为
+            Route::get('hello','sample/Test/index');
+            Route::post('hello','sample/Test/index');
+            Route::any('hello','sample/Test/index');
+
         // 支持 get 和 post 方式
         Route::rule('hello','sample/Test/index',"GET|POST",['https'=>false],[]);
+
+        //路由中传递参数
+        Route::get('hello/:id','sample/Test/index');
+
+    api 带版本号 v1 的使用Route方法
+        Route::get("banner/:id","api/v1.Banner/getBanner");
 
