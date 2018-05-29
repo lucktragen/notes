@@ -1,0 +1,10 @@
+路由使用方法
+    route.php 中
+
+    use think\Route;
+    Route::rule("路由表达式","路由地址","请求类型","路由参数(数组)","变量规则(数组)");
+    例如:
+        Route::rule('hello','sample/Test/index',"GET",['https'=>false],[]);
+        // 支持 get 和 post 方式
+        Route::rule('hello','sample/Test/index',"GET|POST",['https'=>false],[]);
+
