@@ -19,3 +19,11 @@
     api 带版本号 v1 的使用Route方法
         Route::get("banner/:id","api/v1.Banner/getBanner");
 
+        Route::get("api/:version/banner/:id","api/:version.Banner/getBanner");
+
+数据模型:
+    一对一关系: belongsTo
+        belongsTo('关联模型名','外键名','关联表主键名',['模型别名定义'],'join类型');
+
+
+
